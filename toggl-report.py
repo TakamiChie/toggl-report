@@ -82,7 +82,7 @@ for project_id, work_time in top_three_projects:
   response = requests.get(toggl_api_endpoint, auth=(api_key, 'api_token'), params=params)
   data = response.json()
   last_week_project_work_time = data["total_grand"]
-  work_time_project_difference = work_time["dur"] - last_week_project_work_time
+  work_time_project_difference = work_time["dur"] - (0 if last_week_project_work_time is None else last_week_project_work_time)
   project_work_time_ratios_and_differences.append((project_id, work_time["dur"], work_time_ratio, work_time_project_difference, work_time["name"]))
 
 # 結果を出力します
