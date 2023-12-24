@@ -26,6 +26,19 @@ def get_api_records(params):
     page += 1
   return data, sum([entry['dur'] for entry in data])
 
+# 各プロジェクトの作業時間の割合と、先週の作業時間との差を計算します
+def calculation_project_ratios(projects_data):
+  project_work_time_ratios_and_differences = []
+  for project_id, work_time in projects_data:
+    work_time_ratio = work_time["dur"] / total_work_time
+    params['project_ids'] = project_id  # プロジェクトIDを指定します
+    response = requests.get(toggl_api_endpoint, auth=(api_key, 'api_token'), params=params)
+    data = response.json()
+    last_week_project_work_time = data["total_grand"]
+    work_time_project_difference = work_time["dur"] - (0 if last_week_project_work_time is None else last_week_project_work_time)
+    project_work_time_ratios_and_differences.append((project_id, work_time["dur"], work_time_ratio, work_time_project_difference, work_time["name"]))
+  return project_work_time_ratios_and_differences
+
 # Toggl APIのエンドポイントとAPIキーを設定します
 toggl_api_endpoint = "https://api.track.toggl.com/reports/api/v2/details"
 toggl_projects_endpoint = "https://api.track.toggl.com/api/v9/workspaces/{workspace_id}/projects"  # バージョン9を使用します
@@ -72,23 +85,17 @@ for entry in week_data:
     if project_id not in project_work_times:
       project_work_times[project_id] = {"name": entry["project"], "dur": 0}
     project_work_times[project_id]["dur"] += entry['dur']
-top_three_projects = sorted(project_work_times.items(), key=lambda x: x[1]["dur"], reverse=True)[:3]
+top_projects = sorted(project_work_times.items(), key=lambda x: x[1]["dur"], reverse=True)[:3]
+worst_projects = sorted(project_work_times.items(), key=lambda x: x[1]["dur"], reverse=False)[:3]
 
-# 各プロジェクトの作業時間の割合と、先週の作業時間との差を計算します
-project_work_time_ratios_and_differences = []
-for project_id, work_time in top_three_projects:
-  work_time_ratio = work_time["dur"] / total_work_time
-  params['project_ids'] = project_id  # プロジェクトIDを指定します
-  response = requests.get(toggl_api_endpoint, auth=(api_key, 'api_token'), params=params)
-  data = response.json()
-  last_week_project_work_time = data["total_grand"]
-  work_time_project_difference = work_time["dur"] - (0 if last_week_project_work_time is None else last_week_project_work_time)
-  project_work_time_ratios_and_differences.append((project_id, work_time["dur"], work_time_ratio, work_time_project_difference, work_time["name"]))
+project_work_time_ratios_and_differences = calculation_project_ratios(top_projects)
+under_project_work_time_ratios_and_differences = calculation_project_ratios(worst_projects)
 
 # 結果を出力します
 print(f"{last_saturday:%Y年%m月%d日}から{this_friday:%Y年%m月%d日}までのレポート")
 print('ワークスペースの総作業時間:', f"{format_duration(total_work_time)}({format_duration(work_time_difference, True)})")
 print('平均:', f"{format_duration(one_seventh_work_time)}({format_duration(one_seventh_work_time_difference, True)})")
-print('上位三件:')
-for project_id, work_time, work_time_ratio, work_time_project_difference, project_name in project_work_time_ratios_and_differences:
-  print(f"{project_name}: {format_duration(work_time)}({format_duration(work_time_project_difference, True)})  {work_time_ratio:.2%}") 
+for caption, projects in [["上位", project_work_time_ratios_and_differences], ["下位", under_project_work_time_ratios_and_differences]]:
+  print(f'{caption}三件:')
+  for project_id, work_time, work_time_ratio, work_time_project_difference, project_name in projects:
+    print(f"{project_name}: {format_duration(work_time)}({format_duration(work_time_project_difference, True)})  {work_time_ratio:.2%}") 
