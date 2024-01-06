@@ -8,10 +8,14 @@ load_dotenv(".env")
 
 # 時間をHH:mm:ss形式に変換する関数を定義します
 def format_duration(duration, symbol=False):
-  seconds = duration // 1000
+  aduration = abs(duration)
+  seconds = aduration // 1000
   minutes, seconds = divmod(seconds, 60)
   hours, minutes = divmod(minutes, 60)
-  return f'{"+" if symbol and duration > 0 else ""}{int(hours):d}:{int(minutes):02d}:{int(seconds):02d}'
+  symbol = ""
+  if symbol and duration >= 0: symbol = "+"
+  if duration < 0: symbol = "-";
+  return f'{symbol}{int(hours):d}:{int(minutes):02d}:{int(seconds):02d}'
 
 def get_api_records(params):
   data = []
