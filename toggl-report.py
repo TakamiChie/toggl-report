@@ -103,3 +103,4 @@ for caption, projects in [["上位", project_work_time_ratios_and_differences], 
   print(f'{caption}三件:')
   for project_id, work_time, work_time_ratio, work_time_project_difference, project_name in projects:
     print(f"{project_name}: {format_duration(work_time)}({format_duration(work_time_project_difference, True)})  {work_time_ratio:.2%}") 
+print(f"詳細はWebサイトを参照してください\nhttps://track.toggl.com/reports/summary/{params['workspace_id']}/from/{last_saturday:%Y-%m-%d}/to/{this_friday:%Y-%m-%d}")
