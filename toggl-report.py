@@ -12,10 +12,10 @@ def format_duration(duration, symbol=False):
   seconds = aduration // 1000
   minutes, seconds = divmod(seconds, 60)
   hours, minutes = divmod(minutes, 60)
-  symbol = ""
-  if symbol and duration >= 0: symbol = "+"
-  if duration < 0: symbol = "-";
-  return f'{symbol}{int(hours):d}:{int(minutes):02d}:{int(seconds):02d}'
+  sign = ""
+  if symbol and duration >= 0: sign = "+"
+  if duration < 0: sign = "-";
+  return f'{sign}{int(hours):d}:{int(minutes):02d}:{int(seconds):02d}'
 
 def get_api_records(params):
   data = []
